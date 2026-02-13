@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: freelancer-platform-db
+    environment:
+      POSTGRES_DB: freelancer_payments
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: freelancer-platform-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: freelancer_payments
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
+      JWT_SECRET: your_super_secret_jwt_key_change_in_production
+      JWT_EXPIRES_IN: 7d
+      # M-Pesa Configuration (sandbox)
+      MPESA_ENVIRONMENT: sandbox
+      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY:-your_consumer_key}
+      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET:-your_consumer_secret}
+      MPESA_SHORTCODE: ${MPESA_SHORTCODE:-174379}
+      MPESA_INITIATOR_NAME: ${MPESA_INITIATOR_NAME:-testapi}
+      MPESA_SECURITY_CREDENTIAL: ${MPESA_SECURITY_CREDENTIAL:-your_credential}
+      MPESA_CALLBACK_URL: ${MPESA_CALLBACK_URL:-https://your-domain.com/api/webhooks/mpesa/callback}
+      MPESA_TIMEOUT_URL: ${MPESA_TIMEOUT_URL:-https://your-domain.com/api/webhooks/mpesa/timeout}
+      # Rafiki Configuration
+      RAFIKI_BACKEND_URL: ${RAFIKI_BACKEND_URL:-http://rafiki:3001/graphql}
+      RAFIKI_AUTH_URL: ${RAFIKI_AUTH_URL:-http://rafiki:3003/graphql}
+      RAFIKI_WALLET_ADDRESS_URL: ${RAFIKI_WALLET_ADDRESS_URL:-https://yourplatform.com}
+      # Exchange API
+      EXCHANGE_API_URL: https://api.exchangerate-api.com/v4/latest
+      # Platform Config
+      PLATFORM_FEE_PERCENTAGE: 2.5
+      MINIMUM_PAYOUT_KES: 500
+      LOG_LEVEL: info
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/logs:/app/logs
+    command: npm run dev
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: freelancer-platform-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:3000/api
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    command: npm start
+
+  # Rafiki (optional - for development/testing)
+  # Uncomment to run local Rafiki instance
+  # rafiki:
+  #   image: interledger/rafiki:latest
+  #   container_name: rafiki
+  #   environment:
+  #     NODE_ENV: development
+  #   ports:
+  #     - "3001:3001"  # Backend API
+  #     - "3002:3002"  # Admin UI
+  #     - "3003:3003"  # Auth Server
+  #   volumes:
+  #     - rafiki_data:/app/data
+
+volumes:
+  postgres_data:
+  # rafiki_data:
+
+networks:
+  default:
+    name: freelancer-platform-network
