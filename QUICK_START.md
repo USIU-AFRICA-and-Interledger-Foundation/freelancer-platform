@@ -1,6 +1,6 @@
 # Quick Start Guide - Freelancer Payment Platform
 
-## 🚀 Get Started in 5 Minutes
+## Get Started in 5 Minutes
 
 ### Step 1: Prerequisites
 Ensure you have installed:
@@ -61,7 +61,7 @@ Go to "Transactions" to see payment status update in real-time:
 
 ---
 
-## 🎯 What Just Happened?
+##  What Just Happened?
 
 Your payment went through this flow:
 1. **Frontend** sent request to backend
@@ -72,7 +72,7 @@ Your payment went through this flow:
 
 ---
 
-## 🔍 Testing
+##  Testing
 
 ### Sandbox Testing
 - Use M-Pesa sandbox credentials
