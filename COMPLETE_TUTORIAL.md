@@ -1,4 +1,4 @@
-# 🚀 Global Freelancer Payment Platform: Complete Tutorial
+# Global Freelancer Payment Platform: Complete Tutorial
 **The Definitive End-to-End Guide**
 
 > **For Students & Developers**: Build a production-ready fintech application from scratch
@@ -17,7 +17,7 @@ A full-stack payment platform enabling:
 
 ---
 
-## 📚 Table of Contents
+## Table of Contents
 
 1. [System Architecture](#1-system-architecture)
 2. [Prerequisites](#2-prerequisites)
