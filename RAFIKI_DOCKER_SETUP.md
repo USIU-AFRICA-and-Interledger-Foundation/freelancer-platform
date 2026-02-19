@@ -1,4 +1,4 @@
-# 🐳 Rafiki Local Playground: Complete Setup Guide
+#  Rafiki Local Playground: Complete Setup Guide
 
 ## What is Rafiki?
 
