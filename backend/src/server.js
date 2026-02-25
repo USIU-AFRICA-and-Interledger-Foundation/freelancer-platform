@@ -27,10 +27,12 @@ app.get('/api/health', (req, res) => {
 const authRoutes = require('./routes/auth.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const userRoutes = require('./routes/user.routes');
+const webhookRoutes = require('./routes/webhook.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Database connection check
 const db = require('./db');

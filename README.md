@@ -66,15 +66,36 @@ cd backend
 npm install
 ```
 
-3. **Configure Environment Variables**
+3. **Configure Backend Environment Variables**
 Create `backend/.env` with:
 ```env
 PORT=3001
 NODE_ENV=development
 DATABASE_URL=postgresql://user:password@neon-hostname/neondb?sslmode=require
 JWT_SECRET=your_super_secret_jwt_key
+JWT_EXPIRES_IN=1d
+
+# Platform fees & logging
+PLATFORM_FEE_PERCENTAGE=2.5
+MINIMUM_PAYOUT_KES=500
+LOG_LEVEL=info
+
+# M-Pesa (Daraja) configuration
+MPESA_ENVIRONMENT=sandbox
 MPESA_CONSUMER_KEY=your_key
 MPESA_CONSUMER_SECRET=your_secret
+MPESA_SHORTCODE=174379
+MPESA_INITIATOR_NAME=testapi
+MPESA_SECURITY_CREDENTIAL=your_credential
+APP_URL=http://localhost:3001
+MPESA_CALLBACK_URL=${APP_URL}/api/webhooks/mpesa/callback
+MPESA_TIMEOUT_URL=${APP_URL}/api/webhooks/mpesa/timeout
+
+# Rafiki / Interledger configuration
+RAFIKI_MODE=mock
+RAFIKI_BACKEND_URL=http://localhost:4000
+RAFIKI_AUTH_URL=http://localhost:4001
+RAFIKI_WALLET_ADDRESS_URL=https://yourplatform.com
 ```
 
 4. **Run Database Migrations**

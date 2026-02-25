@@ -22,8 +22,9 @@ services:
       MPESA_CALLBACK_URL: ${MPESA_CALLBACK_URL:-https://your-domain.com/api/webhooks/mpesa/callback}
       MPESA_TIMEOUT_URL: ${MPESA_TIMEOUT_URL:-https://your-domain.com/api/webhooks/mpesa/timeout}
       # Rafiki Configuration
-      RAFIKI_BACKEND_URL: ${RAFIKI_BACKEND_URL:-http://rafiki:3001/graphql}
-      RAFIKI_AUTH_URL: ${RAFIKI_AUTH_URL:-http://rafiki:3003/graphql}
+      RAFIKI_MODE: ${RAFIKI_MODE:-mock}
+      RAFIKI_BACKEND_URL: ${RAFIKI_BACKEND_URL:-http://rafiki:3001}
+      RAFIKI_AUTH_URL: ${RAFIKI_AUTH_URL:-http://rafiki:3003}
       RAFIKI_WALLET_ADDRESS_URL: ${RAFIKI_WALLET_ADDRESS_URL:-https://yourplatform.com}
       # Exchange API
       EXCHANGE_API_URL: https://api.exchangerate-api.com/v4/latest
@@ -45,7 +46,7 @@ services:
       dockerfile: Dockerfile
     container_name: freelancer-platform-frontend
     environment:
-      REACT_APP_API_URL: http://localhost:3000/api
+      NEXT_PUBLIC_API_URL: http://backend:3000/api
     ports:
       - "3001:3000"
     depends_on:
