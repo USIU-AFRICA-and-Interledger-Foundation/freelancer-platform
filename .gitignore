@@ -30,8 +30,6 @@ build/
 *.sqlite
 
 # Embedded repositories (tracked separately)
-frontend/
-rafiki-local/
 
 # Temporary files
 tmp/
