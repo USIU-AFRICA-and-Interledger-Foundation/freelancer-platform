@@ -1,26 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: freelancer-platform-db
-    environment:
-      POSTGRES_DB: freelancer_payments
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Backend API
   backend:
     build:
       context: ./backend
@@ -29,11 +9,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: freelancer_payments
-      DB_USER: postgres
-      DB_PASSWORD: postgres123
+      DATABASE_URL: postgresql://neondb_owner:npg_qp6GB4DNKgQR@ep-holy-cloud-ai3r3107-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       JWT_SECRET: your_super_secret_jwt_key_change_in_production
       JWT_EXPIRES_IN: 7d
       # M-Pesa Configuration (sandbox)
@@ -57,9 +33,6 @@ services:
       LOG_LEVEL: info
     ports:
       - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - ./backend/src:/app/src
       - ./backend/logs:/app/logs
@@ -80,8 +53,7 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
-    command: npm start
-
+    command: npm run dev
   # Rafiki (optional - for development/testing)
   # Uncomment to run local Rafiki instance
   # rafiki:
@@ -96,10 +68,8 @@ services:
   #   volumes:
   #     - rafiki_data:/app/data
 
-volumes:
-  postgres_data:
-  # rafiki_data:
-
+  # volumes:
+  #  rafiki_data:
 networks:
   default:
     name: freelancer-platform-network
