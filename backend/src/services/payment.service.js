@@ -70,6 +70,19 @@ class PaymentService {
             throw new Error('Amount must be a positive number.');
         }
 
+        // 1. Get Freelancer M-Pesa Number if not provided
+        let targetPhone = mpesaNumber;
+        if (!targetPhone) {
+            const freelancerProfile = await db.query(
+                'SELECT mpesa_phone FROM freelancer_profiles WHERE user_id = $1',
+                [freelancerId]
+            );
+            if (freelancerProfile.rows.length === 0 || !freelancerProfile.rows[0].mpesa_phone) {
+                throw new Error('Freelancer has no M-Pesa number registered.');
+            }
+            targetPhone = freelancerProfile.rows[0].mpesa_phone;
+        }
+
         // 2. Connector/Rafiki Handling (Asset Transfer + Exchange)
         // We assume the Client pays 'currency' (e.g. USD) and we need to deliver KES
         const quote = await this.getQuote(currency, 'KES', numericAmount);
@@ -107,8 +120,8 @@ class PaymentService {
             // 4. M-Pesa Disbursement (B2C)
             // Now that we "have" the KES from the connector, we send it to M-Pesa
             const mpesaResult = await mpesaService.initiateB2C(
-                Math.floor(quote.destinationAmount), // M-Pesa needs integer for B2C usually, or 2 decimal check
-                mpesaNumber,
+                Math.floor(quote.destinationAmount),
+                targetPhone,
                 transactionId
             );
 

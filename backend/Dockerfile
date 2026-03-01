@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ RUN npm install
 COPY src ./src
 
 # Expose backend port
-EXPOSE 3000
+EXPOSE 3001
 
 # Start development server
 CMD ["npm", "run", "dev"]

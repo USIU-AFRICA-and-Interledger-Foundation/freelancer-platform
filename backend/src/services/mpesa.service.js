@@ -35,12 +35,26 @@ class MpesaService {
      * Sends money from the platform's Paybill/Till to the freelancer's phone
      */
     async initiateB2C(amount, phoneNumber, transactionId) {
+        if (!phoneNumber) {
+            throw new Error('Phone number is required for B2C disbursement');
+        }
         const token = await this.getOAuthToken();
 
         // Format phone number to 254...
-        const formattedPhone = phoneNumber.startsWith('0')
-            ? `254${phoneNumber.slice(1)}`
-            : phoneNumber;
+        // Remove +, spaces, and dashes
+        let cleaned = phoneNumber.replace(/[\s\+\-]/g, '');
+
+        // Handle 07... 01...
+        if (cleaned.startsWith('0')) {
+            cleaned = '254' + cleaned.slice(1);
+        }
+        // Handle 7... 1...
+        else if (cleaned.length === 9 && (cleaned.startsWith('7') || cleaned.startsWith('1'))) {
+            cleaned = '254' + cleaned;
+        }
+
+        const formattedPhone = cleaned;
+        console.log(`[M-Pesa] Formatting phone: ${phoneNumber} -> ${formattedPhone}`);
 
         const payload = {
             InitiatorName: process.env.MPESA_INITIATOR_NAME || 'testapi',
@@ -50,8 +64,8 @@ class MpesaService {
             PartyA: this.shortCode,
             PartyB: formattedPhone,
             Remarks: `Payment for Transaction ${transactionId}`,
-            QueueTimeOutURL: `${process.env.APP_URL}/api/webhooks/mpesa/timeout`,
-            ResultURL: `${process.env.APP_URL}/api/webhooks/mpesa/callback`,
+            QueueTimeOutURL: process.env.MPESA_TIMEOUT_URL || `${process.env.APP_URL}/api/webhooks/mpesa/timeout`,
+            ResultURL: process.env.MPESA_CALLBACK_URL || `${process.env.APP_URL}/api/webhooks/mpesa/callback`,
             Occasion: 'Freelancer Payment'
         };
 

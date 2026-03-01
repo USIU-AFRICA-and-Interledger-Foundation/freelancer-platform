@@ -37,10 +37,14 @@ class RafikiService {
         const effectiveRate = midRate * (1 - spreadPct);
 
         const connectorFeePct = 0.002;
-        const connectorFeeFixed = 0.05;
+        let connectorFeeFixed = 0.05;
+        if (sourceCurrency === 'BTC') connectorFeeFixed = 0.000001;
+        if (sourceCurrency === 'ETH') connectorFeeFixed = 0.00001;
+
         const connectorFee = sourceAmount * connectorFeePct + connectorFeeFixed;
 
-        const destinationAmount = (sourceAmount - connectorFee) * effectiveRate;
+        let destinationAmount = (sourceAmount - connectorFee) * effectiveRate;
+        if (destinationAmount < 0) destinationAmount = 0;
 
         return {
             rate: effectiveRate,

@@ -1,39 +1,24 @@
-version: '3.8'
-
 services:
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: freelancer-platform-backend
+    env_file:
+      - ./backend/.env
     environment:
       NODE_ENV: development
-      PORT: 3000
-      DATABASE_URL: postgresql://neondb_owner:npg_qp6GB4DNKgQR@ep-holy-cloud-ai3r3107-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-      JWT_SECRET: your_super_secret_jwt_key_change_in_production
-      JWT_EXPIRES_IN: 7d
-      # M-Pesa Configuration (sandbox)
-      MPESA_ENVIRONMENT: sandbox
-      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY:-your_consumer_key}
-      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET:-your_consumer_secret}
-      MPESA_SHORTCODE: ${MPESA_SHORTCODE:-174379}
-      MPESA_INITIATOR_NAME: ${MPESA_INITIATOR_NAME:-testapi}
-      MPESA_SECURITY_CREDENTIAL: ${MPESA_SECURITY_CREDENTIAL:-your_credential}
-      MPESA_CALLBACK_URL: ${MPESA_CALLBACK_URL:-https://your-domain.com/api/webhooks/mpesa/callback}
-      MPESA_TIMEOUT_URL: ${MPESA_TIMEOUT_URL:-https://your-domain.com/api/webhooks/mpesa/timeout}
+      PORT: 3001
       # Rafiki Configuration
       RAFIKI_MODE: ${RAFIKI_MODE:-mock}
-      RAFIKI_BACKEND_URL: ${RAFIKI_BACKEND_URL:-http://rafiki:3001}
-      RAFIKI_AUTH_URL: ${RAFIKI_AUTH_URL:-http://rafiki:3003}
+      RAFIKI_BACKEND_URL: ${RAFIKI_BACKEND_URL:-http://rafiki-backend:3001}
+      RAFIKI_AUTH_URL: ${RAFIKI_AUTH_URL:-http://rafiki-auth:3003}
       RAFIKI_WALLET_ADDRESS_URL: ${RAFIKI_WALLET_ADDRESS_URL:-https://yourplatform.com}
       # Exchange API
       EXCHANGE_API_URL: https://api.exchangerate-api.com/v4/latest
-      # Platform Config
-      PLATFORM_FEE_PERCENTAGE: 2.5
-      MINIMUM_PAYOUT_KES: 500
       LOG_LEVEL: info
     ports:
-      - "3000:3000"
+      - "3001:3001"
     volumes:
       - ./backend/src:/app/src
       - ./backend/logs:/app/logs
@@ -46,31 +31,89 @@ services:
       dockerfile: Dockerfile
     container_name: freelancer-platform-frontend
     environment:
-      NEXT_PUBLIC_API_URL: http://backend:3000/api
+      VITE_API_URL: http://localhost:3001/api
     ports:
-      - "3001:3000"
+      - "3000:3000"
     depends_on:
       - backend
+  # Rafiki Local Services
+  rafiki-backend:
+    image: rafiki-backend:latest
+    pull_policy: never
+    container_name: rafiki-backend
+    environment:
+      NODE_ENV: development
+    ports:
+      - "4001:3001"
     volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-    command: npm run dev
-  # Rafiki (optional - for development/testing)
-  # Uncomment to run local Rafiki instance
-  # rafiki:
-  #   image: interledger/rafiki:latest
-  #   container_name: rafiki
-  #   environment:
-  #     NODE_ENV: development
-  #   ports:
-  #     - "3001:3001"  # Backend API
-  #     - "3002:3002"  # Admin UI
-  #     - "3003:3003"  # Auth Server
-  #   volumes:
-  #     - rafiki_data:/app/data
+      - rafiki_data:/app/data
 
-  # volumes:
-  #  rafiki_data:
+  rafiki-frontend:
+    image: rafiki-frontend:latest
+    pull_policy: never
+    container_name: rafiki-frontend
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3004:3004" # Mapped to 3004 to avoid conflict with freelancer frontend on 3000 mapped to 3001
+
+  rafiki-auth:
+    image: rafiki-auth:latest
+    pull_policy: never
+    container_name: rafiki-auth
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3003:3003"
+    volumes:
+      - rafiki_data:/app/data
+
+  rafiki-mock-ase:
+    image: rafiki-mock-ase:latest
+    pull_policy: never
+    container_name: rafiki-mock-ase
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      PORT: 3006
+      SEED_FILE_LOCATION: /workspace/seed.yml
+      KEY_FILE: /workspace/private-key.pem
+      OPEN_PAYMENTS_URL: http://rafiki-backend:3001
+      AUTH_SERVER_DOMAIN: http://rafiki-auth:3006
+      GRAPHQL_URL: http://rafiki-backend:3001/graphql
+      SIGNATURE_VERSION: 1
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      DISPLAY_NAME: Mock Bank
+      DISPLAY_ICON: wallet-icon.svg
+      OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+    ports:
+      - "3006:3006"
+    volumes:
+      - ./rafiki-config/seed.yml:/workspace/seed.yml
+      - ./rafiki-config/private-key.pem:/workspace/private-key.pem
+
+  rafiki-point-of-sale:
+    image: rafiki-point-of-sale:latest
+    pull_policy: never
+    container_name: rafiki-point-of-sale
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3002:3002"
+
+  rafiki-card-service:
+    image: rafiki-card-service:latest
+    pull_policy: never
+    container_name: rafiki-card-service
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3007:3007"
+volumes:
+  rafiki_data:
+
+
 networks:
   default:
     name: freelancer-platform-network
